@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Grade System</title>
+
+<style>
+
+/* ================= BASE ================= */
+
+body{
+    font-family:'Segoe UI';
+    margin:0;
+    padding:15px;
+    background:#f4f6f9;
+    background-image:url(leaves.jpg);
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+}
+
+/* ================= TABLE WRAPPER ================= */
+
+.table-wrapper{
+    width:100%;
+    overflow-x:auto; /* ONLY WHEN NEEDED */
+    -webkit-overflow-scrolling:touch;
+}
+
+/* ================= TABLE FIX ================= */
+
+table{
+    width:100%;
+    min-width:950px; /* controlled scroll length */
+    border-collapse:collapse;
+    table-layout:fixed; /* IMPORTANT: prevents overlap */
+    background:linear-gradient(135deg,#ff5722,#ffd500);
+}
+
+th,td{
+    padding:8px;
+    text-align:center;
+    font-size:12px;
+    overflow:hidden;
+}
+
+/* HEADER */
+th{
+    background:#e9eef3;
+}
+
+/* ================= FIX COLUMN WIDTHS ================= */
+
+th:nth-child(1),
+td:nth-child(1){
+    width:140px;
+    min-width:140px;
+}
+
+th:nth-child(2),
+th:nth-child(3),
+th:nth-child(4),
+th:nth-child(5),
+th:nth-child(6){
+    min-width:140px;
+}
+
+/* RESULT + ACTION */
+th:nth-child(7),
+th:nth-child(8){
+    width:80px;
+}
+
+/* ================= NAME INPUT ================= */
+
+.name{
+    width:100%;
+    padding:5px;
+    box-sizing:border-box;
+}
+
+/* ================= INPUT PAIRS ================= */
+
+.pair{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:3px;
+    flex-wrap:nowrap;
+}
+
+.pair input{
+    width:38px; /* SMALLER = NO BANGGA */
+    text-align:center;
+    font-size:11px;
+    padding:3px;
+}
+
+/* ================= BUTTONS ================= */
+
+button{
+    border:none;
+    cursor:pointer;
+    border-radius:6px;
+}
+
+.add{
+    background:#4caf50;
+    color:white;
+    padding:6px 10px;
+    margin-bottom:10px;
+}
+
+.remove{
+    background:#e53935;
+    color:white;
+    padding:4px 8px;
+}
+
+/* ================= COLORS ================= */
+
+.pass-row{ background:#e8f5e9; }
+.fail-row{ background:#ffebee; }
+
+.result{ font-weight:bold; }
+
+/* ================= SUMMARY ================= */
+
+.summary{
+    margin-top:10px;
+    background:linear-gradient(135deg,#ff5722,#ffd500);
+    padding:10px;
+    border-radius:10px;
+    display:flex;
+    justify-content:space-around;
+}
+
+/* ================= MOBILE FIX ================= */
+
+@media(max-width:768px){
+
+    table{
+        min-width:900px; /* controlled scroll */
+    }
+
+    .pair input{
+        width:36px;
+    }
+
+    th,td{
+        font-size:11px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📊 Advanced Grade System 📊</h1>
+
+<button class="add" onclick="addRow()">➕ Add Student</button>
+
+<div class="table-wrapper">
+
+<table>
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Quiz (20%)</th>
+<th>Lab (30%)</th>
+<th>Assign (10%)</th>
+<th>Attend (10%)</th>
+<th>Exam (30%)</th>
+<th>Final</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="body"></tbody>
+
+</table>
+
+</div>
+
+<div class="summary">
+<div>Total: <span id="total">0</span></div>
+<div>Highest: <span id="high">0</span></div>
+<div>Lowest: <span id="low">0</span></div>
+</div>
+
+</div>
+
+<script>
+
+function createInputs(){
+    return `
+    <div class="pair">
+        <input type="number" oninput="compute()">
+        <span>/</span>
+        <input type="number" oninput="compute()">
+    </div>`;
+}
+
+function addRow(){
+
+    let row=document.createElement("tr");
+
+    row.innerHTML=`
+    <td><input class="name"></td>
+    <td>${createInputs()}</td>
+    <td>${createInputs()}</td>
+    <td>${createInputs()}</td>
+    <td>${createInputs()}</td>
+    <td>${createInputs()}</td>
+    <td class="result">0</td>
+    <td><button class="remove" onclick="this.closest('tr').remove();compute()">X</button></td>
+    `;
+
+    document.getElementById("body").appendChild(row);
+}
+
+function computeCategory(cell){
+
+    let inputs=cell.querySelectorAll("input");
+    let s=0,p=0;
+
+    for(let i=0;i<inputs.length;i+=2){
+        s+=+inputs[i].value||0;
+        p+=+inputs[i+1].value||0;
+    }
+
+    return p? s/p : 0;
+}
+
+function compute(){
+
+    let rows=document.querySelectorAll("#body tr");
+
+    let high=0, low=100, count=0;
+
+    rows.forEach(r=>{
+
+        let quiz=computeCategory(r.children[1]);
+        let lab=computeCategory(r.children[2]);
+        let assign=computeCategory(r.children[3]);
+        let attend=computeCategory(r.children[4]);
+        let exam=computeCategory(r.children[5]);
+
+        let final=(quiz*0.2 + lab*0.3 + assign*0.1 + attend*0.1 + exam*0.3)*100;
+        final=+final.toFixed(2);
+
+        r.querySelector(".result").innerText=final;
+
+        r.classList.remove("pass-row","fail-row");
+
+        if(final>=75) r.classList.add("pass-row");
+        else r.classList.add("fail-row");
+
+        if(final>0){
+            count++;
+            if(final>high) high=final;
+            if(final<low) low=final;
+        }
+    });
+
+    document.getElementById("total").innerText=count;
+    document.getElementById("high").innerText=high;
+    document.getElementById("low").innerText=count?low:0;
+}
+
+</script>
+
+</body>
+</html>
